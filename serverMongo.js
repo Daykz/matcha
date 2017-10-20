@@ -12,7 +12,7 @@ const cors	   = require('cors');
 // const	Signin		= require('./models/inscription');
 // const	Login		= require('./models/connexion');
 const MongoClient	= require('mongodb');
-const bcrypt 		= require('bcrypt-nodejs');
+const bcrypt 		= require('bcrypt-as-promised');
 const jwt			= require('jsonwebtoken');
 var db;
 
@@ -62,10 +62,15 @@ const useSignin = () => {
 	const Router = express.Router();
 
 	Router.post('/', (req, res, next) => {
-				console.log(req.body);
-				db.collection('users').save(req.body)
-				.then(() => res.json('Successfully Signed'))
-				.catch(err => res.json(err));
+				bcrypt.hash(req.body.password, 10)
+				  .then(hash => {
+				  	req.body.password = hash;
+				  	db.collection('users').save(req.body);
+		  			})
+				  .then(() => {
+				  	res.json(req.body);
+				  })
+				  .catch(err => res.json({'error' : err}));
 				})
 		  .get('/:id?', (req, res, next) => {
 		  		if (req.params.id)
